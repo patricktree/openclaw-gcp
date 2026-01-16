@@ -51,8 +51,14 @@ newgrp docker
 
 git clone https://github.com/patricktree/clawdbot.git"
 cd ./clawdbot
-echo 'CLAWDBOT_HOME_VOLUME="clawdbot_home"' > .env
+cat <<'EOF' > .env
+CLAWDBOT_HOME_VOLUME="clawdbot_home"
+CLAWDBOT_DOCKER_APT_PACKAGES="build-essential curl file git"
+EOF
 ./docker-setup.sh
+
+docker compose -f /home/pkerschbaum/clawdbot/docker-compose.yml run --rm clawdbot-cli configure
+# configure gateway: bind LAN, copy token at the end
 
 # Open host port to VM port for Gateway
 gcloud compute ssh clawdbot -- -N -L 18789:localhost:18789
