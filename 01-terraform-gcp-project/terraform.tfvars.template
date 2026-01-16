@@ -1,0 +1,2 @@
+billing_account_id = "BILLING_ACCOUNT_ID"
+org_id = 12345 # remove if project should not be put into a GCP project

@@ -1,6 +1,8 @@
 resource "google_compute_instance" "vm" {
   name         = "clawdbot"
-  machine_type = "c4a-standard-2"
+  machine_type = "c4a-standard-1"
+
+  allow_stopping_for_update = true
 
   scheduling {
     provisioning_model          = "SPOT"
@@ -21,7 +23,8 @@ resource "google_compute_instance" "vm" {
   }
 
   network_interface {
-    network = "default"
+    network    = google_compute_network.vpc.name
+    subnetwork = google_compute_subnetwork.subnet.name
 
     access_config {
       # Ephemeral public IP
@@ -33,7 +36,7 @@ resource "google_compute_instance" "vm" {
 
 resource "google_compute_firewall" "ssh" {
   name    = "clawdbot-allow-ssh"
-  network = "default"
+  network = google_compute_network.vpc.name
 
   allow {
     protocol = "tcp"

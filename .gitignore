@@ -1,10 +1,6 @@
 # Terraform
-.terraform/
-*.tfstate
-*.tfstate.*
-*.tfvars
-!terraform.tfvars.example
-
-# Credentials
-*.json
-credentials/
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+**/_backend.tf

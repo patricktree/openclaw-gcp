@@ -1,11 +1,6 @@
 terraform {
   required_version = ">= 1.0"
 
-  backend "gcs" {
-    bucket = "playground-pkerschbaum-tfstate"
-    prefix = "clawdbot"
-  }
-
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -15,7 +10,7 @@ terraform {
 }
 
 provider "google" {
-  project = local.project_id
+  project = var.project_id
   region  = local.region
   zone    = local.zone
 }
