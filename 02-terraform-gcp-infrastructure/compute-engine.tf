@@ -1,8 +1,10 @@
-resource "google_compute_instance" "vm" {
-  name         = "clawdbot"
+resource "google_compute_instance_template" "vm" {
+  name_prefix  = "clawdbot-"
   machine_type = "c4a-standard-1"
 
-  allow_stopping_for_update = true
+  lifecycle {
+    create_before_destroy = true
+  }
 
   scheduling {
     provisioning_model          = "SPOT"
@@ -11,15 +13,17 @@ resource "google_compute_instance" "vm" {
     instance_termination_action = "STOP"
   }
 
-  boot_disk {
-    initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2510-arm64"
-      size  = 30
-      type  = "hyperdisk-balanced"
+  disk {
+    boot        = true
+    auto_delete = true
+    device_name = "persistent-disk-0"
 
-      provisioned_iops       = 3000
-      provisioned_throughput = 140
-    }
+    source_image = "clawdbot-boot-20260117-1646"
+    disk_size_gb = 30
+    disk_type    = "hyperdisk-balanced"
+
+    provisioned_iops       = 3000
+    provisioned_throughput = 140
   }
 
   network_interface {
@@ -32,6 +36,22 @@ resource "google_compute_instance" "vm" {
   }
 
   tags = ["clawdbot-vm"]
+}
+
+resource "google_compute_instance_group_manager" "vm" {
+  name               = "clawdbot-mig"
+  base_instance_name = "clawdbot"
+  zone               = local.zone
+  target_size        = 1
+
+  version {
+    instance_template = google_compute_instance_template.vm.self_link
+  }
+
+  stateful_disk {
+    device_name = "persistent-disk-0"
+    delete_rule = "NEVER"
+  }
 }
 
 resource "google_compute_firewall" "ssh" {
