@@ -1,13 +1,16 @@
 # Clawdbot on GCP (Google Cloud Platform) via Terraform <!-- omit in toc -->
 
-- [Prerequisites](#prerequisites)
-- [Create \& Configure GCP Project](#create--configure-gcp-project)
-- [Create GCP Infrastructure](#create-gcp-infrastructure)
-- [Install Docker on the Ubuntu machine](#install-docker-on-the-ubuntu-machine)
-- [Setup Clawdbot](#setup-clawdbot)
-- [Access Clawdbot Gateway (dashboard)](#access-clawdbot-gateway-dashboard)
+- [Setup](#setup)
+  - [Prerequisites](#prerequisites)
+  - [Create \& Configure GCP Project](#create--configure-gcp-project)
+  - [Create GCP Infrastructure](#create-gcp-infrastructure)
+  - [Install Docker on the GCP Ubuntu machine](#install-docker-on-the-gcp-ubuntu-machine)
+  - [Setup Clawdbot](#setup-clawdbot)
+- [How-To: Access Clawdbot Gateway (dashboard)](#how-to-access-clawdbot-gateway-dashboard)
 
-## Prerequisites
+## Setup
+
+### Prerequisites
 
 1. **Create a Telegram Bot:**
    1. Open Telegram.
@@ -30,11 +33,12 @@
      - Visit <https://login.tailscale.com/admin/settings/keys>.
      - Click "Generate auth key..." and then "Generate key" (no need to fill out anything).
      - Remember the auth key.
+6. **Get a LLM Provider:** See full list here <https://docs.clawd.bot/providers>, e.g. Claude Code Pro ($20/month).
 
-## Create & Configure GCP Project
+### Create & Configure GCP Project
 
 1. **Use Terraform to create and configure a GCP project:** Run the steps outlined in [the README of `./01-terraform-gcp-project`](./01-terraform-gcp-project/README.md).
-2. **Configure `gcloud` CLI the created GCP project:**
+2. **Configure `gcloud` CLI for the created GCP project:**
 
    ```sh
    gcloud init
@@ -48,15 +52,17 @@
    # Terraform will now use your account to access GCP
    ```
 
-## Create GCP Infrastructure
+### Create GCP Infrastructure
 
-1. **Use Terraform to create the GCP infrastructure:** Run the steps outlined in [the README of `./02-terraform-gcp-infrastructure`](./02-terraform-gcp-infrastructure/README.md).
+**Use Terraform to create the GCP infrastructure:** Run the steps outlined in [the README of `./02-terraform-gcp-infrastructure`](./02-terraform-gcp-infrastructure/README.md).
 
-## Install Docker on the Ubuntu machine
+### Install Docker on the GCP Ubuntu machine
 
 ```sh
+# connect to the GCP Ubuntu machine
 gcloud compute ssh clawdbot
 
+# install and configure Docker
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -75,20 +81,25 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-## Setup Clawdbot
+### Setup Clawdbot
 
 ```sh
+# connect to the GCP Ubuntu machine
 gcloud compute ssh clawdbot
 
+# clone clawdbot
 cd ~/
 git clone https://github.com/patricktree/clawdbot.git"
 cd ./clawdbot
 
+# configure .env
 cat <<'EOF' > .env
 CLAWDBOT_HOME_VOLUME="clawdbot_home"
 TAILSCALE_AUTHKEY="<your-tailscale-auth-key>"
+CLAWDBOT_GATEWAY_TOKEN="<some-random-value>"
 EOF
 
+# build and start Docker Compose setup
 ./docker-setup.sh
 # during onboarding, choose the defaults except:
 # - Enter Telegram bot token: <your token>
@@ -97,20 +108,21 @@ EOF
 #   - Preferred node manager: pnpm
 #   - Skip for now
 
+# configure clawdbot gateway
 docker compose -f ./docker-compose.yml run --rm clawdbot-cli configure
 # configure gateway:
 #   - Gateway bind mode: LAN
 #   - Gateway auth: Token
 #   - Tailscale exposure: Off
-#   - Copy the token
+#   - For the token, set what you have defined as `CLAWDBOT_GATEWAY_TOKEN` before
 ```
 
-## Access Clawdbot Gateway (dashboard)
+## How-To: Access Clawdbot Gateway (dashboard)
 
 1. Open <https://login.tailscale.com/admin/machines>.
 2. Click on machine `clawdbot-gateway`.
 3. Copy value of "Full domain".
-4. Visit `http://<fulldomain>:18789`.
+4. Visit `http://<fulldomain>:18789` on one of your devices which is also connected to your Tailscale VPN.
    - You should see the Clawdbot Gateway.
-5. Click left on "Overview" --> enter the token in field "Gateway Token" --> "Connect".
+5. Click left on "Overview" --> enter the Gateway token in field "Gateway Token" --> Click on "Connect".
    - You should see `Health: OK` on the upper right of the gateway dashboard.
