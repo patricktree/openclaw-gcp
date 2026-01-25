@@ -95,7 +95,6 @@ cd ./clawdbot
 # configure .env
 cat <<'EOF' > .env
 CLAWDBOT_HOME_VOLUME="clawdbot_home"
-TAILSCALE_AUTHKEY="<your-tailscale-auth-key>"
 CLAWDBOT_GATEWAY_TOKEN="<some-random-value>"
 EOF
 
@@ -108,8 +107,12 @@ EOF
 #   - Preferred node manager: pnpm
 #   - Skip for now
 
+# start and setup tailscale
+docker compose exec -d clawdbot-gateway tailscaled --tun=userspace-networking --statedir=/tmp/tailscale
+docker compose exec clawdbot-gateway sh -c 'tailscale up --authkey=<your-tailscale-auth-key>'
+
 # configure clawdbot gateway
-docker compose -f ./docker-compose.yml run --rm clawdbot-cli configure
+docker compose run --rm clawdbot-cli configure
 # configure gateway:
 #   - Gateway bind mode: LAN
 #   - Gateway auth: Token
