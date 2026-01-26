@@ -48,6 +48,12 @@ resource "google_compute_instance_group_manager" "vm" {
     instance_template = google_compute_instance_template.vm.self_link
   }
 
+  update_policy {
+    type                  = "PROACTIVE"
+    minimal_action        = "REPLACE"
+    max_unavailable_fixed = 1
+  }
+
   stateful_disk {
     device_name = "persistent-disk-0"
     delete_rule = "NEVER"
