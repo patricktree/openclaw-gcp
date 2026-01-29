@@ -59,8 +59,11 @@
 ### Install Docker on the GCP Ubuntu machine
 
 ```sh
-# connect to the GCP Ubuntu machine
-gcloud compute ssh clawdbot
+# get the instance name (MIG adds a random suffix)
+INSTANCE=$(gcloud compute instances list --filter="name~^clawdbot" --format="value(name)")
+
+# connect via IAP tunnel (secure - no public SSH exposure)
+gcloud compute ssh $INSTANCE --tunnel-through-iap
 
 # install and configure Docker
 sudo apt-get update
@@ -84,8 +87,11 @@ newgrp docker
 ### Setup Clawdbot
 
 ```sh
-# connect to the GCP Ubuntu machine
-gcloud compute ssh clawdbot
+# get the instance name (MIG adds a random suffix)
+INSTANCE=$(gcloud compute instances list --filter="name~^clawdbot" --format="value(name)")
+
+# connect via IAP tunnel (secure - no public SSH exposure)
+gcloud compute ssh $INSTANCE --tunnel-through-iap
 
 # clone clawdbot
 cd ~/
@@ -108,8 +114,11 @@ EOF
 #   - Preferred node manager: pnpm
 #   - Skip for now
 
+# start tailscale serve
+docker compose exec tailscale tailscale serve --bg 18789
+
 # configure clawdbot gateway
-docker compose -f ./docker-compose.yml run --rm clawdbot-cli configure
+docker compose run --rm clawdbot-cli configure
 # configure gateway:
 #   - Gateway bind mode: LAN
 #   - Gateway auth: Token

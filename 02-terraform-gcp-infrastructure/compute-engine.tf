@@ -60,16 +60,3 @@ resource "google_compute_instance_group_manager" "vm" {
     delete_rule = "NEVER"
   }
 }
-
-resource "google_compute_firewall" "ssh" {
-  name    = "clawdbot-allow-ssh"
-  network = google_compute_network.vpc.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["clawdbot-vm"]
-}
