@@ -4,3 +4,6 @@
 **/*.tfstate.*
 **/*.tfvars
 **/_backend.tf
+
+# Secrets
+.secrets/

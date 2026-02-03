@@ -18,6 +18,23 @@ resource "google_project" "project" {
   deletion_policy = "ABANDON" # the project is not shut down when "terraform destroy" is run. Shut down the project via Google Cloud console or gcloud CLI instead.
 }
 
+resource "google_service_account" "gcloud_cli" {
+  project      = google_project.project.project_id
+  account_id   = "gcloud-cli"
+  display_name = "gcloud-cli"
+  description  = "Service account for gcloud CLI with full access to the project."
+}
+
+resource "google_project_iam_member" "gcloud_cli_owner" {
+  project = google_project.project.project_id
+  role    = "roles/owner"
+  member  = "serviceAccount:${google_service_account.gcloud_cli.email}"
+}
+
+resource "google_service_account_key" "gcloud_cli" {
+  service_account_id = google_service_account.gcloud_cli.name
+}
+
 # Enable IAP API for SSH tunneling
 resource "google_project_service" "iap" {
   project = google_project.project.project_id

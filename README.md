@@ -38,18 +38,22 @@
 ### Create & Configure GCP Project
 
 1. **Use Terraform to create and configure a GCP project:** Run the steps outlined in [the README of `./01-terraform-gcp-project`](./01-terraform-gcp-project/README.md).
-2. **Configure `gcloud` CLI for the created GCP project:**
+2. **Configure `gcloud` CLI with the service account key created by Terraform:**
 
    ```sh
-   gcloud init
-   # - when asked to choose a project, make sure to choose the new project
-   # - when asked for default Compute Region and Zone, choose "[15] europe-west4-a"
+   mkdir -p .secrets
+   KEY_FILE=".secrets/gcloud-cli-key.json"
+
+   terraform -chdir=01-terraform-gcp-project output -raw gcloud_cli_service_account_key_json | base64 --decode > "$KEY_FILE"
+   PROJECT_ID="$(terraform -chdir=01-terraform-gcp-project output -raw project_id)"
+
+   gcloud config configurations create gcloud-cli-clawdbot
+   gcloud config configurations activate gcloud-cli-clawdbot
+   gcloud config set project "$PROJECT_ID"
+   gcloud auth activate-service-account --key-file "$KEY_FILE" --project "$PROJECT_ID"
 
    gcloud config get-value project
-   # should print the correct GCP project ID
-
-   gcloud auth application-default login
-   # Terraform will now use your account to access GCP
+   gcloud auth list
    ```
 
 ### Create GCP Infrastructure
