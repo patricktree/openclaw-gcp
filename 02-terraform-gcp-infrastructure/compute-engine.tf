@@ -1,5 +1,5 @@
 resource "google_compute_instance_template" "vm" {
-  name_prefix  = "clawdbot-"
+  name_prefix  = "openclaw-"
   machine_type = "c4a-standard-1"
 
   lifecycle {
@@ -35,12 +35,12 @@ resource "google_compute_instance_template" "vm" {
     }
   }
 
-  tags = ["clawdbot-vm"]
+  tags = ["openclaw-vm"]
 }
 
 resource "google_compute_instance_group_manager" "vm" {
-  name               = "clawdbot-mig"
-  base_instance_name = "clawdbot"
+  name               = "openclaw-mig"
+  base_instance_name = "openclaw"
   zone               = local.zone
   target_size        = 1
 

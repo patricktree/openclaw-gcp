@@ -33,8 +33,8 @@
    terraform output -raw gcloud_cli_service_account_key_json | base64 --decode > "$KEY_FILE"
    PROJECT_ID="$(terraform output -raw project_id)"
 
-   gcloud config configurations create gcloud-cli-clawdbot
-   gcloud config configurations activate gcloud-cli-clawdbot
+   gcloud config configurations create gcloud-cli-openclaw
+   gcloud config configurations activate gcloud-cli-openclaw
    gcloud config set project "$PROJECT_ID"
    gcloud auth activate-service-account --key-file "$KEY_FILE" --project "$PROJECT_ID"
    ```

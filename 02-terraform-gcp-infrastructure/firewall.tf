@@ -13,5 +13,5 @@ resource "google_compute_firewall" "allow_ssh_iap" {
 
   # IAP's IP range
   source_ranges = ["35.235.240.0/20"]
-  target_tags   = ["clawdbot-vm"]
+  target_tags   = ["openclaw-vm"]
 }

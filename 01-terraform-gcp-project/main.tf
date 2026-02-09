@@ -1,5 +1,5 @@
 locals {
-  project_name = "clawdbot-project"
+  project_name = "openclaw-project"
 }
 
 resource "random_id" "project_id" {

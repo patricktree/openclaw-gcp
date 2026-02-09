@@ -1,12 +1,12 @@
-# Clawdbot on GCP (Google Cloud Platform) via Terraform <!-- omit in toc -->
+# OpenClaw on GCP (Google Cloud Platform) via Terraform <!-- omit in toc -->
 
 - [Setup](#setup)
   - [Prerequisites](#prerequisites)
   - [Create \& Configure GCP Project](#create--configure-gcp-project)
   - [Create GCP Infrastructure](#create-gcp-infrastructure)
   - [Install Docker on the GCP Ubuntu machine](#install-docker-on-the-gcp-ubuntu-machine)
-  - [Setup Clawdbot](#setup-clawdbot)
-- [How-To: Access Clawdbot Gateway (dashboard)](#how-to-access-clawdbot-gateway-dashboard)
+  - [Setup OpenClaw](#setup-openclaw)
+- [How-To: Access OpenClaw Gateway (dashboard)](#how-to-access-openclaw-gateway-dashboard)
 
 ## Setup
 
@@ -16,8 +16,8 @@
    1. Open Telegram.
    2. Contact `@botfather`, send text message `/start`.
    3. Send text message `/newbot`.
-   4. Name `clawdbot`
-   5. Some username (e.g. `john_doe_clawdbot`).
+   4. Name `openclaw`
+   5. Some username (e.g. `john_doe_openclaw_bot`).
    6. Remember the returned token.
 
 2. **Get your Telegram User ID:**
@@ -33,7 +33,7 @@
      - Visit <https://login.tailscale.com/admin/settings/keys>.
      - Click "Generate auth key..." and then "Generate key" (no need to fill out anything).
      - Remember the auth key.
-6. **Get a LLM Provider:** See full list here <https://docs.clawd.bot/providers>, e.g. Claude Code Pro ($20/month).
+6. **Get a LLM Provider:** See full list here <https://docs.openclaw.ai/providers>, e.g. Claude Code Pro ($20/month).
 
 ### Create & Configure GCP Project
 
@@ -47,8 +47,8 @@
    terraform -chdir=01-terraform-gcp-project output -raw gcloud_cli_service_account_key_json | base64 --decode > "$KEY_FILE"
    PROJECT_ID="$(terraform -chdir=01-terraform-gcp-project output -raw project_id)"
 
-   gcloud config configurations create gcloud-cli-clawdbot
-   gcloud config configurations activate gcloud-cli-clawdbot
+   gcloud config configurations create gcloud-cli-openclaw
+   gcloud config configurations activate gcloud-cli-openclaw
    gcloud config set project "$PROJECT_ID"
    gcloud auth activate-service-account --key-file "$KEY_FILE" --project "$PROJECT_ID"
 
@@ -64,7 +64,7 @@
 
 ```sh
 # get the instance name (MIG adds a random suffix)
-INSTANCE=$(gcloud compute instances list --filter="name~^clawdbot" --format="value(name)")
+INSTANCE=$(gcloud compute instances list --filter="name~^openclaw" --format="value(name)")
 
 # connect via IAP tunnel (secure - no public SSH exposure)
 gcloud compute ssh $INSTANCE --tunnel-through-iap
@@ -88,25 +88,25 @@ sudo usermod -aG docker $USER
 newgrp docker
 ```
 
-### Setup Clawdbot
+### Setup OpenClaw
 
 ```sh
 # get the instance name (MIG adds a random suffix)
-INSTANCE=$(gcloud compute instances list --filter="name~^clawdbot" --format="value(name)")
+INSTANCE=$(gcloud compute instances list --filter="name~^openclaw" --format="value(name)")
 
 # connect via IAP tunnel (secure - no public SSH exposure)
 gcloud compute ssh $INSTANCE --tunnel-through-iap
 
-# clone clawdbot
+# clone openclaw
 cd ~/
-git clone https://github.com/patricktree/clawdbot.git"
-cd ./clawdbot
+git clone https://github.com/patricktree/openclaw.git"
+cd ./openclaw
 
 # configure .env
 cat <<'EOF' > .env
-CLAWDBOT_HOME_VOLUME="clawdbot_home"
+OPENCLAW_HOME_VOLUME="openclaw_home"
 TAILSCALE_AUTHKEY="<your-tailscale-auth-key>"
-CLAWDBOT_GATEWAY_TOKEN="<some-random-value>"
+OPENCLAW_GATEWAY_TOKEN="<some-random-value>"
 EOF
 
 # build and start Docker Compose setup
@@ -121,21 +121,21 @@ EOF
 # start tailscale serve
 docker compose exec tailscale tailscale serve --bg 18789
 
-# configure clawdbot gateway
-docker compose run --rm clawdbot-cli configure
+# configure openclaw gateway
+docker compose run --rm openclaw-cli configure
 # configure gateway:
 #   - Gateway bind mode: LAN
 #   - Gateway auth: Token
 #   - Tailscale exposure: Off
-#   - For the token, set what you have defined as `CLAWDBOT_GATEWAY_TOKEN` before
+#   - For the token, set what you have defined as `OPENCLAW_GATEWAY_TOKEN` before
 ```
 
-## How-To: Access Clawdbot Gateway (dashboard)
+## How-To: Access OpenClaw Gateway (dashboard)
 
 1. Open <https://login.tailscale.com/admin/machines>.
-2. Click on machine `clawdbot-gateway`.
+2. Click on machine `openclaw-gateway`.
 3. Copy value of "Full domain".
 4. Visit `https://<fulldomain>` on one of your devices which is also connected to your Tailscale VPN.
-   - You should see the Clawdbot Gateway.
+   - You should see the OpenClaw Gateway.
 5. Click left on "Overview" --> enter the Gateway token in field "Gateway Token" --> Click on "Connect".
    - You should see `Health: OK` on the upper right of the gateway dashboard.
