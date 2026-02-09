@@ -69,6 +69,9 @@ INSTANCE=$(gcloud compute instances list --filter="name~^openclaw" --format="val
 # connect via IAP tunnel (secure - no public SSH exposure)
 gcloud compute ssh $INSTANCE --tunnel-through-iap
 
+# enable case-insensitive search and history search with arrow keys in the terminal
+echo -e "set completion-ignore-case on\n\"\e[A\": history-search-backward\n\"\e[B\": history-search-forward" >> ~/.inputrc && bind -f ~/.inputrc
+
 # install and configure Docker
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg
@@ -105,7 +108,6 @@ cd ./openclaw
 # configure .env
 cat <<'EOF' > .env
 TAILSCALE_AUTHKEY="<your-tailscale-auth-key>"
-OPENCLAW_GATEWAY_TOKEN="<some-random-value>"
 EOF
 
 # build and start Docker Compose setup
@@ -126,7 +128,7 @@ docker compose run --rm openclaw-cli configure
 #   - Gateway bind mode: LAN
 #   - Gateway auth: Token
 #   - Tailscale exposure: Off
-#   - For the token, set what you have defined as `OPENCLAW_GATEWAY_TOKEN` before
+#   - For the token, read `OPENCLAW_GATEWAY_TOKEN` of `.env` and set what is defined there
 ```
 
 ## How-To: Access OpenClaw Gateway (dashboard)
@@ -137,4 +139,18 @@ docker compose run --rm openclaw-cli configure
 4. Visit `https://<fulldomain>` on one of your devices which is also connected to your Tailscale VPN.
    - You should see the OpenClaw Gateway.
 5. Click left on "Overview" --> enter the Gateway token in field "Gateway Token" --> Click on "Connect".
-   - You should see `Health: OK` on the upper right of the gateway dashboard.
+   - You should see error `disconnected (1008): pairing required`.
+6. Run:
+
+   ```sh
+   # get the instance name (MIG adds a random suffix)
+   INSTANCE=$(gcloud compute instances list --filter="name~^openclaw" --format="value(name)")
+
+   # connect via IAP tunnel (secure - no public SSH exposure)
+   gcloud compute ssh $INSTANCE --tunnel-through-iap
+
+   cd ~/openclaw
+
+   docker compose run --rm openclaw-cli devices list # you should see a pending pairing request
+   docker compose run --rm openclaw-cli devices approve <request-id>
+   ```
