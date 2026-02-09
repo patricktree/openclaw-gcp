@@ -104,7 +104,6 @@ cd ./openclaw
 
 # configure .env
 cat <<'EOF' > .env
-OPENCLAW_HOME_VOLUME="openclaw_home"
 TAILSCALE_AUTHKEY="<your-tailscale-auth-key>"
 OPENCLAW_GATEWAY_TOKEN="<some-random-value>"
 EOF
