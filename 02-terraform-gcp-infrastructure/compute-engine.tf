@@ -18,7 +18,7 @@ resource "google_compute_instance_template" "vm" {
     auto_delete = true
     device_name = "persistent-disk-0"
 
-    source_image = "clawdbot-boot-20260117-1646"
+    source_image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2404-lts-arm64"
     disk_size_gb = 30
     disk_type    = "hyperdisk-balanced"
 
