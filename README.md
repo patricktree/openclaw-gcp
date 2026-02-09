@@ -99,7 +99,7 @@ gcloud compute ssh $INSTANCE --tunnel-through-iap
 
 # clone openclaw
 cd ~/
-git clone https://github.com/patricktree/openclaw.git"
+git clone https://github.com/patricktree/openclaw.git
 cd ./openclaw
 
 # configure .env
