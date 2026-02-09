@@ -35,12 +35,22 @@ resource "google_service_account_key" "gcloud_cli" {
   service_account_id = google_service_account.gcloud_cli.name
 }
 
+# Enable Cloud Resource Manager API for project/org metadata access
+resource "google_project_service" "cloud_resource_manager" {
+  project = google_project.project.project_id
+  service = "cloudresourcemanager.googleapis.com"
+}
+
 # Enable IAP API for SSH tunneling
 resource "google_project_service" "iap" {
   project = google_project.project.project_id
   service = "iap.googleapis.com"
+}
 
-  disable_on_destroy = false
+# Enable Compute Engine API for network management
+resource "google_project_service" "compute" {
+  project = google_project.project.project_id
+  service = "compute.googleapis.com"
 }
 
 resource "google_storage_bucket" "tfstate" {

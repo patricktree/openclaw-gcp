@@ -1,6 +1,6 @@
 resource "google_compute_instance_template" "vm" {
   name_prefix  = "openclaw-"
-  machine_type = "c4a-standard-1"
+  machine_type = "c4a-standard-2"
 
   lifecycle {
     create_before_destroy = true
