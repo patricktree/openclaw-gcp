@@ -6,6 +6,7 @@
   - [Create GCP Infrastructure](#create-gcp-infrastructure)
   - [Install Docker on the GCP Ubuntu machine](#install-docker-on-the-gcp-ubuntu-machine)
   - [Setup OpenClaw](#setup-openclaw)
+  - [Start Telegram conversation with your bot](#start-telegram-conversation-with-your-bot)
 - [How-To: Access OpenClaw Gateway (dashboard)](#how-to-access-openclaw-gateway-dashboard)
 
 ## Setup
@@ -112,35 +113,39 @@ EOF
 
 # build and start Docker Compose setup
 ./docker-setup.sh
-# during onboarding, choose the defaults except:
-# - Enter Telegram bot token: <your token>
-# - Telegram allowFrom (user id): <your Telegram user ID>
-# - Configure skills now: Yes
-#   - Preferred node manager: pnpm
-#   - Skip for now
+# during onboarding, configure everything as needed.
+# some recommended answers:
+#   - Configure skills now: Yes
+#     - Preferred node manager: pnpm
+#     - Skip for now
+#   - Enable hooks: Skip for now
+#   - Enable zsh shell completion for openclaw: no
+# it will hang at "Onboarding complete. Use the dashboard link above to control OpenClaw."
+# hit CTRL+C there
+
+# start everything
+docker compose up -d
+
+# the onboarding wizard generates its own token which may differ from the one
+# docker-setup.sh wrote to .env. The gateway reads from its config file, so
+# .env must match for CLI commands and the dashboard to authenticate correctly.
+# so, sync the gateway token from the config to .env.
+CONFIG_TOKEN=$(docker compose exec openclaw-gateway node dist/index.js config get gateway.auth.token 2>/dev/null | tr -d '"[:space:]')
+sed -i "s/^OPENCLAW_GATEWAY_TOKEN=.*/OPENCLAW_GATEWAY_TOKEN=$CONFIG_TOKEN/" .env
+docker compose restart openclaw-gateway
 
 # start tailscale serve
 docker compose exec tailscale tailscale serve --bg 18789
-
-# configure openclaw gateway
-docker compose run --rm openclaw-cli configure
-# configure gateway:
-#   - Gateway bind mode: LAN
-#   - Gateway auth: Token
-#   - Tailscale exposure: Off
-#   - For the token, read `OPENCLAW_GATEWAY_TOKEN` of `.env` and set what is defined there
+# this will print the Tailscale URL for the OpenClaw gateway dashboard like "https://openclaw-gateway.tail8b23f9.ts.net/"
 ```
 
-## How-To: Access OpenClaw Gateway (dashboard)
+### Start Telegram conversation with your bot
 
-1. Open <https://login.tailscale.com/admin/machines>.
-2. Click on machine `openclaw-gateway`.
-3. Copy value of "Full domain".
-4. Visit `https://<fulldomain>` on one of your devices which is also connected to your Tailscale VPN.
-   - You should see the OpenClaw Gateway.
-5. Click left on "Overview" --> enter the Gateway token in field "Gateway Token" --> Click on "Connect".
-   - You should see error `disconnected (1008): pairing required`.
-6. Run:
+1. Open Telegram.
+2. Search for the bot username you created (e.g. `john_doe_openclaw_bot`) and start a conversation.
+3. Send the message `/start` to the bot.
+   - It will reply with "OpenClaw: acccess not configured."
+4. SSH into the VM and approve the Telegram pairing request:
 
    ```sh
    # get the instance name (MIG adds a random suffix)
@@ -151,6 +156,38 @@ docker compose run --rm openclaw-cli configure
 
    cd ~/openclaw
 
-   docker compose run --rm openclaw-cli devices list # you should see a pending pairing request
+   docker compose run --rm openclaw-cli pairing approve telegram <code>
+   ```
+
+5. Write "hello" to the bot in Telegram.
+   - It should reply now and start the "soul" process ("who am I?" etc).
+
+## How-To: Access OpenClaw Gateway (dashboard)
+
+1. Open <https://login.tailscale.com/admin/machines>.
+2. Click on machine `openclaw-gateway`.
+3. Copy value of "Full domain" (the Tailscale URL for the OpenClaw gateway dashboard).
+4. Visit the URL on one of your devices which is also connected to your Tailscale VPN.
+   - You should see the OpenClaw gateway dashboard.
+5. On the "Overview" page, paste the gateway token (value of `OPENCLAW_GATEWAY_TOKEN` in `.env`) into the "Gateway Token" field and click "Connect".
+   - You will see error `disconnected (1008): pairing required`. This is expected — the dashboard device needs to be approved.
+6. SSH into the VM and approve the dashboard's pairing request:
+
+   ```sh
+   # get the instance name (MIG adds a random suffix)
+   INSTANCE=$(gcloud compute instances list --filter="name~^openclaw" --format="value(name)")
+
+   # connect via IAP tunnel (secure - no public SSH exposure)
+   gcloud compute ssh $INSTANCE --tunnel-through-iap
+
+   cd ~/openclaw
+
+   # list devices — you should see 1 pending request from the dashboard
+   docker compose run --rm openclaw-cli devices list
+
+   # approve it (use the Request ID from the Pending table)
    docker compose run --rm openclaw-cli devices approve <request-id>
    ```
+
+7. Go back to the browser dashboard and click "Connect" again.
+   - The dashboard should now show "Connected" with status and uptime info.
