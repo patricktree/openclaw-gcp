@@ -124,6 +124,8 @@ EOF
 # hit CTRL+C there
 
 # start everything
+# Tailscale is embedded in the gateway container — the entrypoint starts
+# tailscaled, authenticates, and configures Tailscale Serve automatically.
 docker compose up -d
 
 # the onboarding wizard generates its own token which may differ from the one
@@ -134,8 +136,8 @@ CONFIG_TOKEN=$(docker compose exec openclaw-gateway node dist/index.js config ge
 sed -i "s/^OPENCLAW_GATEWAY_TOKEN=.*/OPENCLAW_GATEWAY_TOKEN=$CONFIG_TOKEN/" .env
 docker compose restart openclaw-gateway
 
-# start tailscale serve
-docker compose exec tailscale tailscale serve --bg 18789
+# verify Tailscale Serve is running (should show the HTTPS proxy URL)
+docker compose exec openclaw-gateway tailscale serve status
 # this will print the Tailscale URL for the OpenClaw gateway dashboard like "https://openclaw-gateway.tail8b23f9.ts.net/"
 ```
 
